@@ -22,6 +22,7 @@
 #import "SpriteManager.h"
 #import "TextureCache.h"
 #import "Persistence.h"
+#import "SharedRenderer.h"
 
 @implementation SpritePack
 
@@ -206,10 +207,11 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(SpriteManager);
 //    }
 
     BOOL cameraFront = [spriteString isEqualToString: @"Camera:Front"];
-    BOOL cameraBack = [spriteString isEqualToString: @"Camera:Front"];
+    BOOL cameraBack = [spriteString isEqualToString: @"Camera:Back"];
 
     if(cameraFront || cameraBack) {
-        spriteString = @"Documents:Foo";
+        BasicRendererViewController* vc = [SharedRenderer renderer];
+        return [vc getCameraTexture];
     }
 
     BOOL relative = NO;

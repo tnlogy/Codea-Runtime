@@ -88,6 +88,7 @@ typedef enum {
 	kCCTexture2DPixelFormat_RGBA4444,
 	//! 16-bit textures: RGB5A1
 	kCCTexture2DPixelFormat_RGB5A1,	
+    kCCTexture2DPixelFormat_Camera,
 
 	//! Default texture format: RGBA8888
 	kCCTexture2DPixelFormat_Default = kCCTexture2DPixelFormat_RGBA8888,

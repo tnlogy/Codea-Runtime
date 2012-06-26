@@ -124,6 +124,7 @@
 - (void) imagePickerControllerDidCancel: (UIImagePickerController *) picker;
 - (void) imagePickerController: (UIImagePickerController *) picker
   didFinishPickingMediaWithInfo: (NSDictionary *) info;
+- (CCTexture2D*) getCameraTexture;
 
 
 @end
