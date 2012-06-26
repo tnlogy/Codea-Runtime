@@ -1184,10 +1184,7 @@
             didFinishPickingMediaWithInfo: (NSDictionary *) info {
     NSLog(@"Finished");
     [self dismissModalViewControllerAnimated: YES];
-    [self startAnimation];
-    
-    
-    NSString *mediaType = [info objectForKey: UIImagePickerControllerMediaType];
+        
     UIImage *originalImage, *editedImage, *imageToSave;
     
         
@@ -1235,6 +1232,9 @@
     [UIImagePNGRepresentation(sourceImage) writeToFile:file atomically:YES];        
 
     [picker release];
+    [path release];
+    [spriteName release];
+    [self startAnimation];
 }
 
 @end
