@@ -26,6 +26,8 @@
 #import <UIKit/UIKit.h>
 #import <CoreGraphics/CoreGraphics.h>
 
+#import "BasicRendererViewController.h"
+#import "SharedRenderer.h"
 #import "image.h"
 #import "lauxlib.h"
 #import "SpriteManager.h"
@@ -656,6 +658,105 @@ int spriteList(lua_State *L)
         luaL_error(L, "Expected one argument");
         return 0;        
     }
+}
+
+NSString *pickImagePath;
+NSString *pickImageSpriteName;
+
+NSString* getPickImagePath() {
+    return pickImagePath;
+}
+NSString* getPickImageSpriteName() {
+    return pickImageSpriteName;
+}
+
+int pickImage(struct lua_State* L)
+{
+    int n = lua_gettop(L);
+
+    if(n != 1)
+    {
+        luaL_error(L, "Expected one arguments");
+        return 0;
+    }
+    
+    size_t keyLen = 0;
+    const char* key = luaL_checklstring(L, 1, &keyLen);
+    
+    if(has_nulls(key, keyLen))
+    {
+        luaL_error(L, "Key cannot have null characters");
+        return 0;
+    }
+    if (keyLen == 0) 
+    {
+        luaL_error(L, "Key cannot be the empty string");
+    }    
+    
+    NSString* nsKey = [NSString stringWithCString:key encoding:NSUTF8StringEncoding];
+            
+    if (nsKey)
+    {
+        NSArray* components = [nsKey componentsSeparatedByString:@":"];
+        if ([components count] != 2)
+        {
+            luaL_error(L, "Invalid image key");
+            return 0;
+        }
+        NSString* spritePackName = [components objectAtIndex:0];
+        NSString* spriteName = [components objectAtIndex:1];
+        NSString* path = nil;
+        
+        if ([spritePackName isEqualToString:@"Documents"])
+        {
+            path = getDocumentsImagesPath();
+        }
+        else if ([spritePackName isEqualToString:@"Project"])
+        {
+            path = getProjectImagesPath();
+        }
+        else if ([spritePackName isEqualToString:@"Dropbox"])
+        {
+            path = getDropboxImagesPath();
+        }
+        else 
+        {
+            // Cannot write to any other sprite packs (read only, or don't exist)
+            luaL_error(L, "Invalid sprite pack name");
+            return 0;
+        }
+
+        pickImagePath = path;
+        [pickImagePath retain];
+        pickImageSpriteName = spriteName;
+        [pickImageSpriteName retain];
+
+        if ([UIImagePickerController isSourceTypeAvailable:
+            UIImagePickerControllerSourceTypeCamera] == NO) {
+            return 0;        
+        } 
+ 
+        UIImagePickerController *cameraUI = [[UIImagePickerController alloc] init];
+        cameraUI.sourceType = UIImagePickerControllerSourceTypeCamera;
+    
+        // Displays a control that allows the user to choose picture or
+        // movie capture, if both are available:
+        cameraUI.mediaTypes =
+            [UIImagePickerController availableMediaTypesForSourceType:
+                UIImagePickerControllerSourceTypeCamera];
+    
+        // Hides the controls for moving & scaling pictures, or for
+        // trimming movies. To instead show the controls, use YES.
+        cameraUI.allowsEditing = YES;
+    
+        BasicRendererViewController* vc = [SharedRenderer renderer]; 
+        cameraUI.delegate = vc;
+        [vc presentModalViewController: cameraUI animated: YES];
+        return 1;
+
+    }
+    
+    return 0;
 }
 
 #pragma mark Code

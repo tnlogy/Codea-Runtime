@@ -1173,4 +1173,68 @@
     }
 }
 
+- (void) imagePickerControllerDidCancel: (UIImagePickerController *) picker {
+    NSLog(@"Canceled");
+    [self dismissModalViewControllerAnimated: YES];
+    [self startAnimation];
+    [picker release];
+}
+
+- (void) imagePickerController: (UIImagePickerController *) picker
+            didFinishPickingMediaWithInfo: (NSDictionary *) info {
+    NSLog(@"Finished");
+    [self dismissModalViewControllerAnimated: YES];
+    [self startAnimation];
+    
+    
+    NSString *mediaType = [info objectForKey: UIImagePickerControllerMediaType];
+    UIImage *originalImage, *editedImage, *imageToSave;
+    
+        
+    editedImage = (UIImage *) [info objectForKey:
+                                UIImagePickerControllerEditedImage];
+    originalImage = (UIImage *) [info objectForKey:
+                                UIImagePickerControllerOriginalImage];
+        
+    if (editedImage) {
+        imageToSave = editedImage;
+    } else {
+        imageToSave = originalImage;
+    }
+        
+    // Save the new image (original or edited) to the Camera Roll
+    UIImageWriteToSavedPhotosAlbum (imageToSave, nil, nil , nil);
+    
+    // Save the new image to sprite pack
+    // Check if on retina ipad and save out both @2x and regular file        
+    NSString* path = getPickImagePath();
+    NSString* spriteName = getPickImageSpriteName();
+    NSString* retinaFile = nil;
+    NSString* file = nil;
+    
+    if( [UIScreen mainScreen].scale == 2 )
+    {
+        retinaFile = [[path stringByAppendingPathComponent:[NSString stringWithFormat:@"%@@2x",spriteName]] stringByAppendingPathExtension:@"png"];                                   
+    }
+    
+    file = [[path stringByAppendingPathComponent:spriteName] stringByAppendingPathExtension:@"png"];                       
+    
+    UIImage* sourceImage = imageToSave;
+        
+/*    if( image->scaleFactor == 2 && retinaFile )
+    {
+        [UIImagePNGRepresentation(sourceImage) writeToFile:retinaFile atomically:YES];            
+        
+        //Resize the image and write it out as the regular file
+        sourceImage = [UIImage imageWithImage:sourceImage 
+                                 scaledToSize:CGSizeMake(sourceImage.size.width/2, 
+                                                         sourceImage.size.height/2) 
+                                  scaleFactor:1.0];
+    }*/
+    
+    [UIImagePNGRepresentation(sourceImage) writeToFile:file atomically:YES];        
+
+    [picker release];
+}
+
 @end

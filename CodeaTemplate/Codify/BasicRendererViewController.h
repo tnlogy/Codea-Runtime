@@ -46,7 +46,9 @@
 
 @interface BasicRendererViewController : UIViewController<LuaStateDelegate,
                                                           ScreenCaptureDelegate,
-                                                          KeyboardInputViewDelegate>
+                                                          KeyboardInputViewDelegate,
+                                                          UINavigationControllerDelegate,
+                                                          UIImagePickerControllerDelegate>
 {
 @protected
     EAGLContext *context;
@@ -117,5 +119,10 @@
 - (void) setupRenderGlobals;
 - (void) setupPhysicsGlobals;
 - (void) setupAccelerometerValues;
+
+- (void) imagePickerControllerDidCancel: (UIImagePickerController *) picker;
+- (void) imagePickerController: (UIImagePickerController *) picker
+  didFinishPickingMediaWithInfo: (NSDictionary *) info;
+
 
 @end

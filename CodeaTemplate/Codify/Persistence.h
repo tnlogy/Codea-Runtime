@@ -64,6 +64,9 @@ extern "C" {
     NSString* getProjectImagesPath();    
     void setupGlobalData();
     
+    int pickImage(struct lua_State* L);
+    NSString* getPickImagePath();
+    NSString* getPickImageSpriteName();
     
 #ifdef __cplusplus
 }

@@ -621,6 +621,9 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(LuaState);
     LuaRegFunc(startRecording);
     LuaRegFunc(stopRecording);    
     LuaRegFunc(isRecording);    
+
+    LuaRegFunc(pickImage);
+
     
     LuaRegFunc(clip);
     LuaRegFunc(noClip);        
@@ -777,6 +780,8 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(LuaState);
     LuaDudFunc(stopRecording);    
     LuaDudFunc(isRecording);        
     
+    LuaRegFunc(pickImage);
+
     LuaDudFunc(clip);
     LuaDudFunc(noClip);    
 
@@ -815,7 +820,7 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(LuaState);
     LuaDudFunc(readImage);
     LuaDudFunc(spriteList);
 
-    
+
         
     //OS Commands
     LuaDudFunc(openURL);        
