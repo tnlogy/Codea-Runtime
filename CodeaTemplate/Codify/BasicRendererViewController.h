@@ -48,7 +48,8 @@
                                                           ScreenCaptureDelegate,
                                                           KeyboardInputViewDelegate,
                                                           UINavigationControllerDelegate,
-                                                          UIImagePickerControllerDelegate>
+                                                          UIImagePickerControllerDelegate,
+                                                          AVCaptureVideoDataOutputSampleBufferDelegate>
 {
 @protected
     EAGLContext *context;

@@ -205,6 +205,13 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(SpriteManager);
 //        return [[TextureCache sharedInstance] textureForSprite:[@"SpritePacks" stringByAppendingPathComponent:relFile]];
 //    }
 
+    BOOL cameraFront = [spriteString isEqualToString: @"Camera:Front"];
+    BOOL cameraBack = [spriteString isEqualToString: @"Camera:Front"];
+
+    if(cameraFront || cameraBack) {
+        spriteString = @"Documents:Foo";
+    }
+
     BOOL relative = NO;
     NSString* file = [self spriteFileFromString:spriteString relative:&relative];
     
