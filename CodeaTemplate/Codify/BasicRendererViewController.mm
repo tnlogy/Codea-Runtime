@@ -50,14 +50,12 @@
 
 @interface BasicRendererViewController () {
     // setupAVCapture
-    // EAGLContext *_context;
     AVCaptureSession *_session;
-    CVOpenGLESTextureCacheRef _videoTextureCache;
     NSString *_sessionPreset;
     
-    // Capture frame
-    size_t _textureWidth;
-    size_t _textureHeight;
+    CVImageBufferRef pixelBuffer;
+    CVImageBufferRef framePixelBuffer;
+
     
     CVOpenGLESTextureRef _textureRef;
     CCTexture2D *cameraTexture;
@@ -1258,31 +1256,11 @@
 
 /* Camera stream code */
 
-- (void)cleanUpTextures
-{    
-    if (_textureRef)
-    {
-        CFRelease(_textureRef);
-        _textureRef = NULL;        
-    }
-    
-    // Periodic texture cache flush every frame
-    CVOpenGLESTextureCacheFlush(_videoTextureCache, 0);
-}
-
 - (void)setupAVCapture
 {
     cameraTexture = nil;
     currentCameraFrame = nil;
     
-    //-- Create CVOpenGLESTextureCacheRef for optimal CVImageBufferRef to GLES texture conversion.
-   /* CVReturn err = CVOpenGLESTextureCacheCreate(kCFAllocatorDefault, NULL, (__bridge void *)context, NULL, &_videoTextureCache);
-    if (err) 
-    {
-        NSLog(@"Error at CVOpenGLESTextureCacheCreate %d", err);
-        return;
-    }*/
-
     //-- Setup Capture Session.
     _session = [[AVCaptureSession alloc] init];
     [_session beginConfiguration];
@@ -1308,10 +1286,6 @@
     AVCaptureVideoDataOutput * dataOutput = [[AVCaptureVideoDataOutput alloc] init];
     [dataOutput setAlwaysDiscardsLateVideoFrames:YES]; // Probably want to set this to NO when recording
     
-    //-- Set to YUV420.
-//    [dataOutput setVideoSettings:[NSDictionary dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_420YpCbCr8BiPlanarFullRange] 
-//                                                             forKey:(id)kCVPixelBufferPixelFormatTypeKey]]; // Necessary for manual preview
-
     [dataOutput setVideoSettings:[NSDictionary dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA] 
                                                                forKey:(id)kCVPixelBufferPixelFormatTypeKey]]; // Necessary for manual preview
     
@@ -1325,29 +1299,14 @@
     [_session startRunning];
 }
 
-- (void)tearDownAVCapture
-{
-    [self cleanUpTextures];
-    
-    CFRelease(_videoTextureCache);
-}
-
-CVImageBufferRef pixelBuffer;
-CVImageBufferRef framePixelBuffer;
-
 - (void)captureOutput:(AVCaptureOutput *)captureOutput 
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer 
        fromConnection:(AVCaptureConnection *)connection
 {
-    NSLog(@"Capture frame");
     if (cameraTexture) {
+        // Current frame is not processed yet, so ignore this frame.
         return;
     }
-    
-//    if (cameraTexture) {
-//        CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
-//        [cameraTexture release];
-//    }
     
     pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     CVPixelBufferLockBaseAddress(pixelBuffer, 0);
@@ -1364,9 +1323,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 {
     if (cameraTexture) {
         if (currentCameraFrame) {
-            // CVPixelBufferUnlockBaseAddress(framePixelBuffer, 0);
             [currentCameraFrame dealloc];
-            //[currentCameraFrame release];
         }
         currentCameraFrame = cameraTexture;
         framePixelBuffer = pixelBuffer;
