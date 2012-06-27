@@ -60,7 +60,8 @@
     size_t _textureHeight;
     
     CVOpenGLESTextureRef _textureRef;
-    CCTexture2D *texture;
+    CCTexture2D *cameraTexture;
+    CCTexture2D *currentCameraFrame;
 }
 
 @property (nonatomic, retain) EAGLContext *context;
@@ -1271,15 +1272,16 @@
 
 - (void)setupAVCapture
 {
-    texture = nil;
+    cameraTexture = nil;
+    currentCameraFrame = nil;
     
     //-- Create CVOpenGLESTextureCacheRef for optimal CVImageBufferRef to GLES texture conversion.
-    CVReturn err = CVOpenGLESTextureCacheCreate(kCFAllocatorDefault, NULL, (__bridge void *)context, NULL, &_videoTextureCache);
+   /* CVReturn err = CVOpenGLESTextureCacheCreate(kCFAllocatorDefault, NULL, (__bridge void *)context, NULL, &_videoTextureCache);
     if (err) 
     {
         NSLog(@"Error at CVOpenGLESTextureCacheCreate %d", err);
         return;
-    }
+    }*/
 
     //-- Setup Capture Session.
     _session = [[AVCaptureSession alloc] init];
@@ -1331,103 +1333,47 @@
 }
 
 CVImageBufferRef pixelBuffer;
+CVImageBufferRef framePixelBuffer;
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput 
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer 
        fromConnection:(AVCaptureConnection *)connection
 {
     NSLog(@"Capture frame");
+    if (cameraTexture) {
+        return;
+    }
     
-//    CVReturn err;
+//    if (cameraTexture) {
+//        CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+//        [cameraTexture release];
+//    }
+    
     pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     CVPixelBufferLockBaseAddress(pixelBuffer, 0);
     int width = CVPixelBufferGetWidth(pixelBuffer);
     int height = CVPixelBufferGetHeight(pixelBuffer);
-    
-    if (!_videoTextureCache)
-    {
-        NSLog(@"No video texture cache");
-        return;
-    }
-    
-    if (width != _textureWidth ||
-        height != _textureHeight)
-    {
-        _textureWidth = width;
-        _textureHeight = height;
-    }
-    if(texture) {
-//        CVPixelBufferUnlockBaseAddress((CVImageBufferRef)[texture keepData:NULL length:0], 0);
-        [texture release];
-    }
 
-    texture = [[[CCTexture2D alloc] initWithData:CVPixelBufferGetBaseAddress(pixelBuffer)
+    cameraTexture = [[[CCTexture2D alloc] initWithData:CVPixelBufferGetBaseAddress(pixelBuffer)
                                     pixelFormat:kCCTexture2DPixelFormat_Camera 
-                                    pixelsWide:_textureWidth pixelsHigh:_textureHeight
-                                    contentSize:CGSizeMake(_textureWidth, _textureHeight)] retain];
-
-
-    
-//    [self cleanUpTextures];
-    
-    // CVOpenGLESTextureCacheCreateTextureFromImage will create GLES texture
-    // optimally from CVImageBufferRef.
-    
-    // Y-plane
-/*    glActiveTexture(GL_TEXTURE2);
-    err = CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault, 
-                                                       _videoTextureCache,
-                                                       pixelBuffer,
-                                                       NULL,
-                                                       GL_TEXTURE_2D,
-                                                       GL_RGBA,
-                                                       _textureWidth,
-                                                       _textureHeight,
-                                                       GL_RGBA,
-                                                       GL_UNSIGNED_BYTE,
-                                                       0,
-                                                       &_textureRef);
-    if (err) 
-    {
-        NSLog(@"Error at CVOpenGLESTextureCacheCreateTextureFromImage %d", err);
-    }   
-    
-    glBindTexture(CVOpenGLESTextureGetTarget(_textureRef), CVOpenGLESTextureGetName(_textureRef));
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
-    
-  */  
-    /*CVImageBufferRef pixelBuffer2 = CMSampleBufferGetImageBuffer(sampleBuffer);
-    if(!texture) {
-    texture = [[[CCTexture2D alloc] initWithData:CVPixelBufferGetBaseAddress(pixelBuffer2) pixelFormat:kCCTexture2DPixelFormat_RGBA8888 pixelsWide:_textureWidth pixelsHigh:_textureHeight contentSize:CGSizeMake(_textureWidth, _textureHeight)] autorelease];
-    }*/
-    // UV-plane
-  /*  glActiveTexture(GL_TEXTURE1);
-    err = CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault, 
-                                                       _videoTextureCache,
-                                                       pixelBuffer,
-                                                       NULL,
-                                                       GL_TEXTURE_2D,
-                                                       GL_RG_EXT,
-                                                       _textureWidth/2,
-                                                       _textureHeight/2,
-                                                       GL_RG_EXT,
-                                                       GL_UNSIGNED_BYTE,
-                                                       1,
-                                                       &_chromaTexture);
-    if (err) 
-    {
-        NSLog(@"Error at CVOpenGLESTextureCacheCreateTextureFromImage %d", err);
-    }
-    
-    glBindTexture(CVOpenGLESTextureGetTarget(_chromaTexture), CVOpenGLESTextureGetName(_chromaTexture));
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); */
+                                    pixelsWide:width pixelsHigh:height
+                                    contentSize:CGSizeMake(width, height)] retain];
 }
 
 - (CCTexture2D*) getCameraTexture
 {
-    return texture;
+    if (cameraTexture) {
+        if (currentCameraFrame) {
+            // CVPixelBufferUnlockBaseAddress(framePixelBuffer, 0);
+            [currentCameraFrame dealloc];
+            //[currentCameraFrame release];
+        }
+        currentCameraFrame = cameraTexture;
+        framePixelBuffer = pixelBuffer;
+        cameraTexture = nil;
+    }
+    
+    return currentCameraFrame;
 }
 
 
